@@ -1,0 +1,4 @@
+.stack-work/
+*~
+CS316Coursework2021.cabal
+stack.yaml.lock

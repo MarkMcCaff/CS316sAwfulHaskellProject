@@ -21,8 +21,12 @@ type Record = [(String,String)]
 -- > lookupField "c" [("a","1"),("b","3")]
 -- returns @Error "Field 'c' not present."@.
 lookupField :: String -> Record -> Result String
-lookupField fieldname records =
-  Error "lookupField: not implemented"
+lookupField fieldname []= Error "lookupField: not implemented"
+lookupField fieldname ((x,y):records) = 
+    if fieldname == x then
+      Ok y
+    else
+      lookupField fieldname records
 
 -- | Given a header listing field names, like:
 --

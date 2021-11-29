@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 -- | Implements 'Record's, looking up fields in them, and their
 -- conversion to and from rows.
 module Records where
@@ -21,8 +23,8 @@ type Record = [(String,String)]
 -- > lookupField "c" [("a","1"),("b","3")]
 -- returns @Error "Field 'c' not present."@.
 lookupField :: String -> Record -> Result String
-lookupField fieldname []= Error "lookupField: not implemented"
-lookupField fieldname ((x,y):records) = 
+lookupField fieldname []= Error ("Field '" ++ fieldname ++ "' not present")
+lookupField fieldname ((x,y):records) =
     if fieldname == x then
       Ok y
     else
@@ -31,7 +33,7 @@ lookupField fieldname ((x,y):records) =
 -- | Given a header listing field names, like:
 --
 -- >  ["Mountain", "Country"]
---
+--    
 -- and a row like:
 --
 -- >   ["Ben Nevis", "Scotland"]
@@ -42,9 +44,15 @@ lookupField fieldname ((x,y):records) =
 --
 -- If the number of field names in the header does not match the
 -- number of fields in the row, an @Error@ should be returned.
+-- type Record = [(String,String)]
+
 rowToRecord :: [String] -> Row -> Result Record
-rowToRecord header row =
-  Error "rowToRecord: not implemented"
+rowToRecord _ [] = Error "Row empty"
+rowToRecord [] _ = Error "Header empty"
+rowToRecord (x:header) (y:row)
+  | null header || null row = Ok [(x,y)]
+  | otherwise = Ok ((x,y):rowToRecord header row)
+
 
 -- | Given a header listing field names, and a list of rows, converts
 -- each row into a record. See 'rowToRecord' for how individual rows
@@ -75,8 +83,9 @@ rowsToRecords header rows =
 -- This function returns an @Error@ if any of the field names listed in
 -- the header are not in the record.
 recordToRow :: [String] -> Record -> Result Row
-recordToRow header record =
-  Error "recordToRow: not implemented"
+recordToRow _ [] = Error "Cell Empty"
+recordToRow [] _ = Error "Header empty"
+recordToRow header row = Error "Not Implemented"
 
 -- | Given a header listing field names, and a list of records,
 -- converts each record into a row. See 'recordToRow' for how

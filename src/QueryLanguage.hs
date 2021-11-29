@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 -- | Implementation of a Query Language for filtering lists of records.
 module QueryLanguage where
 
@@ -43,27 +45,45 @@ data FieldOrLiteral
 --
 -- > evalFieldOrLiteral (Literal "E") [("Country", "S"),("Name","Ben Nevis")] == Ok "E"
 evalFieldOrLiteral :: FieldOrLiteral -> Record -> Result String
-evalFieldOrLiteral fieldOrLiteral record =
-  Error "evalFieldOrLiteral: not implemented"
+evalFieldOrLiteral (Field _) [] = Error "Not Present"
+evalFieldOrLiteral (Literal a) _ = Ok a
+evalFieldOrLiteral (Field a) ((x,y):records)
+  | a == x = Ok y
+  | otherwise = evalFieldOrLiteral (Field a) records
+
+
 
 -- | Evaluate a 'Condition' against a record. For @Equal e1 e2@, uses
 -- 'evalFieldOrLiteral' to evaluate @e1@ and @e2@. If they both
 -- succeed, then compares the results to check for equality. Any
 -- errors arising from evaluation are returned to the caller.
 evalCondition :: Condition -> Record -> Result Bool
-evalCondition condition record =
-  Error "evalCondition: not implemented"
+evalCondition (Equal x y) record =
+  if evalFieldOrLiteral x record /= Error "Not Present" && evalFieldOrLiteral y record /= Error "Not Present" then
+    Ok (evalFieldOrLiteral x record == evalFieldOrLiteral y record)
+  else
+    Error "Both Conditions not equal"
+
+
 
 -- | Evaluate a 'Query' against a record. For @Condition c@, uses
 -- 'evalCondition'. For the other forms of query, it evaluates the
 -- sub-queries recursively and combines the results. Any errors that
 -- occur during evaluation are returned to the caller.
 evalQuery :: Query -> Record -> Result Bool
-evalQuery query record =
-  Error "evalQuery: not implemented"
+evalQuery query [] = Error "Record is empty"
+evalQuery _ record = Error "Query is empty"
+evalQuery AlwaysTrue       _    = Ok True
+evalQuery AlwaysFalse      _    = Ok False
+evalQuery (Condition x) records = evalCondition x records
+evalQuery (And x y)     records = 
+  Ok ((evalQuery x records /= Error "Both Conditions not equal") && (evalQuery y records /= Error "Both Conditions not equal"))
+evalQuery (Or  x y)     records = 
+  Ok ((evalQuery x records /= Error "Both Conditions not equal") || (evalQuery y records /= Error "Both Conditions not equal"))
+evalQuery (Not x  )     records = 
+  Ok (evalQuery x records  == Error "Both Conditions not equal")
 
 -- | Evaluate a 'Query' against every 'Record' in a list, returning
 -- only those records for which the query says 'True'.
 filterByQuery :: Query -> [Record] -> Result [Record]
-filterByQuery query records =
-  Error "filterByQuery: not implemented"
+filterByQuery query records = Error "filterByQuery: not implemented"

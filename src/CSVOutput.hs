@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 -- | Functions for outputting rows in CSV format.
 module CSVOutput where
 
@@ -28,8 +29,9 @@ import Control.Monad (forM_)
 -- Haskell string @"hello \"world\"."@ becomes @"hello ""world""."@ in
 -- the CSV output.
 stringOfRow :: Row -> String
-stringOfRow row =
-  "stringOfRow: NOT IMPLEMENTED"
+stringOfRow (row:rows)
+  | rows /= [] = row++',':stringOfRow rows 
+  | otherwise = row
 
 -- HINT: the function 'intercalate' (imported above) may be useful.
 
